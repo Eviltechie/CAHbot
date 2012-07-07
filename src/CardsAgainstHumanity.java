@@ -136,7 +136,9 @@ public class CardsAgainstHumanity extends PircBot {
 	}
 	
 	public void onNickChange(String oldNick, String login, String hostname, String newNick) {
-		getPlayer(oldNick).setName(newNick);
+	    if(getPlayer(oldNick) != null){
+	        getPlayer(oldNick).setName(newNick);
+	    }
 	}
 	
 	public void onPart(String channel, String sender, String login, String hostname) {
@@ -194,12 +196,11 @@ public class CardsAgainstHumanity extends PircBot {
 			this.sendMessage(channel, "There is no game currently playing to drop yourself from");
 			return;
 		}*/
+	    if(getPlayer(name) == null){
+	        return;
+	    }
 		Player p;
-		try {
-			p = getPlayer(name);
-		} catch (Exception e) {
-			return;
-		}
+		p = getPlayer(name);
 		this.sendMessage(channel, p.getName() + " has left this game of Cards Against Humanity with " + p.getScore() + " points!");
 		players.remove(p);
 		//blacklist.add(p);
