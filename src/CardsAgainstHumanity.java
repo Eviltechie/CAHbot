@@ -3,6 +3,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -20,9 +21,6 @@ public class CardsAgainstHumanity extends PircBot {
 	//TODO don't let people spam join/leave
 	//TODO Shortcuts
 	
-	//TODO Rejoin server on floodkick - fixed
-	//TODO If you don't have a card, the count is off by one - fixed
-	//TODO Way to remove player from game - fixed
 	//TODO Inactivity timeout
 	//TODO Check scores in game
 	//TODO some sort of bug with !cah drop and causing another pick
@@ -42,6 +40,7 @@ public class CardsAgainstHumanity extends PircBot {
 	
 	final String channel = "#joe.to";
 	private ArrayList<Player> players = new ArrayList<Player>();
+	private HashSet<Player> allPlayers = new HashSet<Player>();
 	//private ArrayList<Player> blacklist = new ArrayList<Player>();
 	private ArrayList<Player> randomPlayers;
 	private ArrayList<String> originalBlackCards = new ArrayList<String>();
@@ -186,6 +185,7 @@ public class CardsAgainstHumanity extends PircBot {
 			}
 		}*/
 		players.add(new Player(name, this));
+		allPlayers.add(new Player(name, this));
 		this.sendMessage(channel, name + " joins this game of Cards Against Humanity!");
 	}
 	
@@ -262,7 +262,7 @@ public class CardsAgainstHumanity extends PircBot {
 		this.sendMessage(channel, "The game is over!");
 		this.sendMessage(channel, "Scores for this game were:");
 		int winningScore = 0;
-		for (Player p : players) {
+		for (Player p : allPlayers) {
 			this.sendMessage(channel, p.getName() + " " + p.getScore());
 			if (p.getScore() > winningScore)
 				winningScore = p.getScore();
@@ -272,17 +272,16 @@ public class CardsAgainstHumanity extends PircBot {
 			if (p.getScore() == winningScore)
 				this.sendMessage(channel, p.getName());
 		}
+		allPlayers.clear();
 		players.clear();
 	}
 	
 	private void newCzar() {
 		Player oldCzar = czar;
 		Random playerPicker = new Random();
-		while (true) { //TODO while(czar.equals(oldCzar))
-			czar = players.get(playerPicker.nextInt(players.size()));
-			if (!czar.equals(oldCzar))
-				break;
-		}
+		ArrayList<Player> contestants = new ArrayList<Player>(players);
+		contestants.remove(oldCzar);
+		czar = contestants.get(playerPicker.nextInt(contestants.size()));
 		this.sendMessage(channel, czar.getName() + " is the next czar");
 	}
 	
