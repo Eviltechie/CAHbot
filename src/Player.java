@@ -8,6 +8,7 @@ public class Player {
 	private int awesomePoints = 0;
 	private CardsAgainstHumanity ircBot;
 	public String playedCard;
+	private int hash = 0;
 	
 	public Player(String name, CardsAgainstHumanity ircBot) {
 		this.name = name;
@@ -15,6 +16,19 @@ public class Player {
 		drawTo10();
 		showCardsToPlayer();
 	}
+	
+    @Override
+    public String toString() {
+        return "Player{" + "name=" + getName() + '}';
+    }
+
+    @Override
+    public int hashCode() {
+        if (hash == 0 || hash == 485) {
+            hash = 97 * 5 + (this.getName() != null ? this.getName().toLowerCase().hashCode() : 0);
+        }
+        return hash;
+    }
 
 	public String getName() {
 		return name;
