@@ -263,18 +263,20 @@ public class CardsAgainstHumanity extends PircBot {
 		status = GameStatus.Idle;
 		czar = null;
 		this.sendMessage(channel, "The game is over!");
-		this.sendMessage(channel, "Scores for this game were:");
+		String s = "Scores for this game were: ";
 		int winningScore = 0;
 		for (Player p : allPlayers) {
-			this.sendMessage(channel, p.getName() + " " + p.getScore());
+			s += "[" + p.getName() + " " + p.getScore() + "] ";
 			if (p.getScore() > winningScore)
 				winningScore = p.getScore();
 		}
-		this.sendMessage(channel, "Winners this game are:");
+		this.sendMessage(channel, s);
+		s = "Winners this game were: ";
 		for (Player p : allPlayers) {
 			if (p.getScore() == winningScore)
-				this.sendMessage(channel, p.getName());
+				s += p.getName() + " ";
 		}
+		this.sendMessage(channel, s);
 		allPlayers.clear();
 		players.clear();
 	}
