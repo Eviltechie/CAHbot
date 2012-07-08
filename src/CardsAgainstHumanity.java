@@ -27,6 +27,7 @@ public class CardsAgainstHumanity extends PircBot {
 	//TODO Hold drop's until after card is picked, should fix above bug
 	//TODO Opportunity to dump hand after 10 rounds
 	//TODO HOF
+	//TODO Delay on remove from game on disconnect
 	
 	// \x03#,# \u0003 Colors
 	// \x02    \u0002 Bold
@@ -270,7 +271,7 @@ public class CardsAgainstHumanity extends PircBot {
 				winningScore = p.getScore();
 		}
 		this.sendMessage(channel, "Winners this game are:");
-		for (Player p : players) {
+		for (Player p : allPlayers) {
 			if (p.getScore() == winningScore)
 				this.sendMessage(channel, p.getName());
 		}
