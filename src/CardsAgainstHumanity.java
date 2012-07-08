@@ -186,8 +186,9 @@ public class CardsAgainstHumanity extends PircBot {
 				return;
 			}
 		}*/
-		players.add(new Player(name, this));
-		allPlayers.add(new Player(name, this));
+		Player p = new Player(name, this);
+		players.add(p);
+		allPlayers.add(p);
 		this.sendMessage(channel, name + " joins this game of Cards Against Humanity!");
 	}
 	
