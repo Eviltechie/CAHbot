@@ -93,7 +93,10 @@ public class Player {
 		for (String card : cardsToRemove) {
 			whiteCards.remove(card);
 		}
-		ircBot.sendMessage(ircBot.channel, getName() + ": Card(s) received");
+		if (ircBot.requiredAnswers == 1)
+			ircBot.sendMessage(ircBot.channel, getName() + ": Card received");
+		else
+			ircBot.sendMessage(ircBot.channel, getName() + ": Cards received");
 		ircBot.checkForPlayedCards();
 	}
 }
