@@ -30,6 +30,14 @@ public class CardsAgainstHumanity extends PircBot {
 	//TODO HOF
 	//TODO Delay on remove from game on disconnect
 	
+    public static void main(String[] args) throws Exception {
+        CardsAgainstHumanity bot = new CardsAgainstHumanity();
+        bot.setVerbose(true);
+        bot.connect("irc.gamesurge.net");
+        bot.joinChannel("#joe.to");
+        bot.setMessageDelay(2300);
+    }
+    
 	// \x03#,# \u0003 Colors
 	// \x02    \u0002 Bold
 	
