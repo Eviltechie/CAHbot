@@ -8,7 +8,6 @@ public class Player {
 	private int awesomePoints = 0;
 	private CardsAgainstHumanity ircBot;
 	public String playedCard;
-	private int hash = 0;
 	
 	public Player(String name, CardsAgainstHumanity ircBot) {
 		this.name = name;

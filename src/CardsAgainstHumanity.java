@@ -188,12 +188,15 @@ public class CardsAgainstHumanity extends PircBot {
 				return;
 			}
 		}*/
-		Player p = new Player(name, this);
-		players.add(p);
-		if (!allPlayers.contains(p)) {
-		    allPlayers.add(p);
+		for (Player p : allPlayers) {
+		    if (p.getName().equalsIgnoreCase(name)) {
+		        players.add(p);
+		        this.sendMessage(channel, PircColors.BOLD + name + " rejoins this game of Cards Against Humanity!");
+		        return;
+		    }
 		}
-		this.sendMessage(channel, name + " joins this game of Cards Against Humanity!");
+		players.add(new Player(name, this));
+		this.sendMessage(channel, PircColors.BOLD + name + " joins this game of Cards Against Humanity!");
 	}
 	
 	private void drop(String name) {
