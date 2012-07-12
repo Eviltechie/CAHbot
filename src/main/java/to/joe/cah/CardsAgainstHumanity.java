@@ -1,7 +1,10 @@
 package to.joe.cah;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -66,8 +69,11 @@ public class CardsAgainstHumanity extends PircBot {
 	
 	public CardsAgainstHumanity() throws Exception {
 		this.setName("CAHbot");
+		File black = new File("black.txt");
+		File white = new File("white.txt");
+		this.ifNotExists(black,white);
 		
-		FileReader f = new FileReader("/home/bender/cahbot/black.txt");
+		FileReader f = new FileReader(black);
 		BufferedReader br = new BufferedReader(f);
 		String s;
 		while ((s = br.readLine()) != null) {
@@ -76,13 +82,37 @@ public class CardsAgainstHumanity extends PircBot {
 		f.close();
 		br.close();
 		
-		f = new FileReader("/home/bender/cahbot/white.txt");
+		f = new FileReader("white.txt");
 		br = new BufferedReader(f);
 		while ((s = br.readLine()) != null) {
 			originalWhiteCards.add(s);
 		}
 		f.close();
 		br.close();
+	}
+	
+	private void ifNotExists(File... files){
+	    for(File file:files){
+	        if(file.exists()){
+	            continue;
+	        }
+	        System.out.println("Saving "+file);
+	        InputStream in=CardsAgainstHumanity.class.getClassLoader().getResourceAsStream(file.getName());
+	        try {
+                file.createNewFile();            
+                FileOutputStream out=new FileOutputStream(file);
+                byte buf[]=new byte[1024];
+                int len;
+	            while((len=in.read(buf))>0){ 
+	                out.write(buf,0,len);
+	            }
+	            out.close();
+	            in.close();
+	        } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+	    }
 	}
 	
 	private Player getPlayer(String name) {
