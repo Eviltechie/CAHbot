@@ -9,7 +9,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.regex.Matcher;
@@ -17,8 +16,6 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jibble.pircbot.Colors;
-import org.jibble.pircbot.IrcException;
-import org.jibble.pircbot.NickAlreadyInUseException;
 import org.jibble.pircbot.PircBot;
 
 public class CardsAgainstHumanity extends PircBot {
@@ -47,74 +44,76 @@ public class CardsAgainstHumanity extends PircBot {
     // \x02 \u0002 Bold
 
     public static void main(String[] args) throws Exception {
-        CardsAgainstHumanity bot = new CardsAgainstHumanity();
+        CardsAgainstHumanity bot = new CardsAgainstHumanity("CAHBot");
         bot.setVerbose(true);
         bot.connect("irc.gamesurge.net");
-        bot.joinChannel("#joe.to");
+        bot.joinChannel(gameChannel);
         bot.setMessageDelay(2300);
     }
 
-    final String channel = "#joe.to";
-    private ArrayList<Player> players = new ArrayList<Player>();
+    final static String gameChannel = "#joe.to";
+    private ArrayList<Player> currentPlayers = new ArrayList<Player>();
     private HashSet<Player> allPlayers = new HashSet<Player>();
     // private ArrayList<Player> blacklist = new ArrayList<Player>();
-    private ArrayList<Player> randomPlayers;
+    private ArrayList<Player> currentShuffledPlayers;
     private ArrayList<String> originalBlackCards = new ArrayList<String>();
-    private ArrayList<String> blackCards = new ArrayList<String>();
+    private ArrayList<String> activeBlackCards = new ArrayList<String>();
     private ArrayList<String> originalWhiteCards = new ArrayList<String>();
-    private ArrayList<String> whiteCards = new ArrayList<String>();
-    private String blackCard;
+    private ArrayList<String> activeWhiteCards = new ArrayList<String>();
+    private String currentBlackCard;
     private Timer timer = new Timer();
-    private GameStatus status = GameStatus.Idle;
-    private Player czar;
+    private GameStatus currentGameStatus = GameStatus.Idle;
+    private Player currentCzar;
     public int requiredAnswers = 1;
 
-    public CardsAgainstHumanity() throws Exception {
-        this.setName("CAHbot");
-        File black = new File("black.txt");
-        File white = new File("white.txt");
-        this.ifNotExists(black, white);
+    public CardsAgainstHumanity(String botName) throws Exception {
+        this.setName(botName);
+        File blackFile = new File("black.txt");
+        File whiteFile = new File("white.txt");
+        this.ifNotExists(blackFile, whiteFile);
 
-        FileReader f = new FileReader(black);
-        BufferedReader br = new BufferedReader(f);
-        String s;
-        while ((s = br.readLine()) != null) {
-            originalBlackCards.add(s);
+        FileReader fileReader = new FileReader(blackFile);
+        BufferedReader bufferedReader = new BufferedReader(fileReader);
+        String line;
+        while ((line = bufferedReader.readLine()) != null) {
+            originalBlackCards.add(line);
         }
-        f.close();
-        br.close();
+        fileReader.close();
+        bufferedReader.close();
 
-        f = new FileReader("white.txt");
-        br = new BufferedReader(f);
-        while ((s = br.readLine()) != null) {
-            originalWhiteCards.add(s);
+        fileReader = new FileReader("white.txt");
+        bufferedReader = new BufferedReader(fileReader);
+        while ((line = bufferedReader.readLine()) != null) {
+            originalWhiteCards.add(line);
         }
-        f.close();
-        br.close();
+        fileReader.close();
+        bufferedReader.close();
     }
 
     public void checkForPlayedCards() {
-        int playedCards = 0;
-        for (Player p : players) {
-            if (p.playedCard != null)
-                playedCards++;
+        int playedCardsCount = 0;
+        for (Player player : currentPlayers) {
+            if (player.playedCard != null)
+                playedCardsCount++;
         }
-        if (playedCards + 1 == players.size()) {
-            this.sendMessage(channel, "All players have played their white cards");
-            this.sendMessage(channel, "The black card is " + Colors.BOLD + "\"" + blackCard + "\"" + Colors.NORMAL + " The white cards are:");
-            playedCards = 0;
-            randomPlayers = new ArrayList<Player>(players);
-            randomPlayers.remove(czar);
-            Collections.shuffle(randomPlayers);
-            for (Player p : randomPlayers) {
-                if (p.equals(czar))
-                    continue;
-                playedCards++;
-                this.sendMessage(channel, playedCards + ") " + p.playedCard);
+        if (playedCardsCount + 1 == currentPlayers.size()) {
+            this.message("All players have played their white cards");
+            this.message("The black card is " + Colors.BOLD + "\"" + currentBlackCard + "\"" + Colors.NORMAL + " The white cards are:");
+            playedCardsCount = 0;
+            currentShuffledPlayers = new ArrayList<Player>(currentPlayers);
+            currentShuffledPlayers.remove(currentCzar);
+            Collections.shuffle(currentShuffledPlayers);
+            for (Player player : currentShuffledPlayers) {
+                playedCardsCount++;
+                this.message(playedCardsCount + ") " + player.playedCard);
             }
-            this.sendMessage(channel, czar.getName() + ": Pick the best white card");
-            status = GameStatus.ChoosingWinner;
+            this.message(currentCzar.getName() + ": Pick the best white card");
+            currentGameStatus = GameStatus.ChoosingWinner;
         }
+    }
+    
+    public void message(String message) {
+        this.sendMessage(gameChannel, message);
     }
 
     private void drop(String name) {
@@ -123,18 +122,17 @@ public class CardsAgainstHumanity extends PircBot {
          * "There is no game currently playing to drop yourself from"); return;
          * }
          */
-        if (getPlayer(name) == null) {
+        Player player = getPlayer(name);
+        if(player == null){
             return;
         }
-        Player p;
-        p = getPlayer(name);
-        this.sendMessage(channel, p.getName() + " has left this game of Cards Against Humanity with " + p.getScore() + " points!");
-        players.remove(p);
+        this.message(player.getName() + " has left this game of Cards Against Humanity with " + player.getScore() + " points!");
+        currentPlayers.remove(player);
         // blacklist.add(p);
-        if (czar.equals(p))
-            newCzar();
-        if (players.size() < 3)
+        if(currentPlayers.size() < 3)
             stop();
+        if (currentCzar.equals(player))
+            newCzar();
         else
             checkForPlayedCards();
     }
@@ -158,9 +156,9 @@ public class CardsAgainstHumanity extends PircBot {
     }
 
     private Player getPlayer(String name) {
-        for (Player p : players) {
-            if (p.getName().equals(name))
-                return p;
+        for (Player player : currentPlayers) {
+            if (player.getName().equals(name))
+                return player;
         }
         return null;
     }
@@ -171,103 +169,102 @@ public class CardsAgainstHumanity extends PircBot {
                 continue;
             }
             System.out.println("Saving " + file);
-            InputStream in = CardsAgainstHumanity.class.getClassLoader().getResourceAsStream(file.getName());
+            InputStream inputStream = CardsAgainstHumanity.class.getClassLoader().getResourceAsStream(file.getName());
             try {
                 file.createNewFile();
-                FileOutputStream out = new FileOutputStream(file);
-                byte buf[] = new byte[1024];
-                int len;
-                while ((len = in.read(buf)) > 0) {
-                    out.write(buf, 0, len);
+                FileOutputStream outputStream = new FileOutputStream(file);
+                byte buffer[] = new byte[1024];
+                int length;
+                while ((length = inputStream.read(buffer)) > 0) {
+                    outputStream.write(buffer, 0, length);
                 }
-                out.close();
-                in.close();
+                outputStream.close();
+                inputStream.close();
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
     }
 
     private void join(String name) {
-        if (status == GameStatus.Idle) {
-            this.sendMessage(channel, "There is no game currently playing. Try starting one with !cah start");
+        if (currentGameStatus == GameStatus.Idle) {
+            this.message("There is no game currently playing. Try starting one with !cah start");
             return;
         }
-        for (Player p : players) {
-            if (p.getName().equals(name)) {
-                this.sendMessage(channel, name + ": you can't join this game twice!");
+        for (Player player : currentPlayers) {
+            if (player.getName().equals(name)) {
+                this.message(name + ": you can't join this game twice!");
                 return;
             }
         }
         /*
          * for (Player p : blacklist) { if (p.getName().equals(name)) {
-         * this.sendMessage(channel, name +
+         * this.message(name +
          * ": You can't join a game after leaving one"); return; } }
          */
-        for (Player p : allPlayers) {
-            if (p.getName().equalsIgnoreCase(name)) {
-                players.add(p);
-                this.sendMessage(channel, Colors.BOLD + name + " rejoins this game of Cards Against Humanity!");
+        for (Player player : allPlayers) {
+            if (player.getName().equalsIgnoreCase(name)) {
+                currentPlayers.add(player);
+                this.message(Colors.BOLD + name + " rejoins this game of Cards Against Humanity!");
                 return;
             }
         }
-        players.add(new Player(name, this));
-        this.sendMessage(channel, Colors.BOLD + name + " joins this game of Cards Against Humanity!");
+        currentPlayers.add(new Player(name, this));
+        this.message(Colors.BOLD + name + " joins this game of Cards Against Humanity!");
     }
 
     private void nag(String sender) {
-        if (status == GameStatus.WaitingForCards) {
+        if (currentGameStatus == GameStatus.WaitingForCards) {
             String missingPlayers = "";
-            for (Player p : players) {
-                if (!p.equals(czar) && p.playedCard == null) {
-                    System.out.println(p.getName());
-                    missingPlayers += p.getName() + " ";
+            for (Player player : currentPlayers) {
+                if (!player.equals(currentCzar) && player.playedCard == null) {
+                    System.out.println(player.getName());
+                    missingPlayers += player.getName() + " ";
                 }
             }
-            this.sendMessage(channel, "Waiting for " + missingPlayers + "to submit cards");
-        } else if (status == GameStatus.ChoosingWinner) {
-            this.sendMessage(channel, "Waiting for " + czar.getName() + " to pick the winning card");
+            this.message("Waiting for " + missingPlayers + "to submit cards");
+        } else if (currentGameStatus == GameStatus.ChoosingWinner) {
+            this.message("Waiting for " + currentCzar.getName() + " to pick the winning card");
         }
     }
 
     private void newCzar() {
-        Player oldCzar = czar;
-        Random playerPicker = new Random();
-        ArrayList<Player> contestants = new ArrayList<Player>(players);
+        Player oldCzar = currentCzar;
+        ArrayList<Player> contestants = new ArrayList<Player>(currentPlayers);
         contestants.remove(oldCzar);
         System.out.println("Contestants for czar: " + contestants.toString());
-        czar = contestants.get(playerPicker.nextInt(contestants.size()));
-        this.sendMessage(channel, czar.getName() + " is the next czar");
+        Collections.shuffle(contestants);
+        currentCzar = contestants.get(0);
+        this.message(currentCzar.getName() + " is the next czar");
     }
 
     private void nextTurn() {
         newCzar();
-        if (blackCards.size() < 1) {
-            blackCards = new ArrayList<String>(originalBlackCards);
-            Collections.shuffle(blackCards);
+        if (activeBlackCards.size() < 1) {
+            activeBlackCards = new ArrayList<String>(originalBlackCards);
+            Collections.shuffle(activeBlackCards);
         }
-        blackCard = "\u00030,1" + blackCards.remove(0) + "\u0003";
-        requiredAnswers = StringUtils.countMatches(blackCard, "_");
-        blackCard.replaceAll("_", "<BLANK>");
-        this.sendMessage(channel, "The next black card is " + Colors.BOLD + "\"" + blackCard + "\"");
+        currentBlackCard = "\u00030,1" + activeBlackCards.remove(0) + "\u0003";
+        requiredAnswers = StringUtils.countMatches(currentBlackCard, "_");
+        currentBlackCard.replaceAll("_", "<BLANK>");
+        this.message("The next black card is " + Colors.BOLD + "\"" + currentBlackCard + "\"");
         if (requiredAnswers > 1)
-            sendMessage(channel, "Be sure to play " + requiredAnswers + " white cards this round");
-        status = GameStatus.WaitingForCards;
-        for (Player p : players) {
-            p.playedCard = null;
-            p.drawTo10();
-            if (!p.equals(czar))
-                p.showCardsToPlayer();
+            message("Be sure to play " + requiredAnswers + " white cards this round");
+        currentGameStatus = GameStatus.WaitingForCards;
+        for (Player player : currentPlayers) {
+            player.playedCard = null;
+            player.drawTo10();
+            if (!player.equals(currentCzar))
+                player.showCardsToPlayer();
         }
     }
 
     public String nextWhiteCard() {
-        if (whiteCards.size() < 1) {
-            whiteCards = new ArrayList<String>(originalWhiteCards);
-            Collections.shuffle(whiteCards);
+        if (activeWhiteCards.size() < 1) {
+            activeWhiteCards = new ArrayList<String>(originalWhiteCards);
+            Collections.shuffle(activeWhiteCards);
         }
-        return whiteCards.remove(0);
+        return activeWhiteCards.remove(0);
     }
 
     @Override
@@ -277,37 +274,37 @@ public class CardsAgainstHumanity extends PircBot {
 
     @Override
     public void onMessage(String channel, String sender, String login, String hostname, String message) {
-        Pattern p = Pattern.compile("play ((?:[0-9]+ ?){" + requiredAnswers + "})");
-        Matcher m = p.matcher(message);
+        Pattern pattern1 = Pattern.compile("play ((?:[0-9]+ ?){" + requiredAnswers + "})");
+        Matcher matcher1 = pattern1.matcher(message);
 
-        Pattern p1 = Pattern.compile("pick ([0-9]+)");
-        Matcher m1 = p1.matcher(message);
+        Pattern pattern2 = Pattern.compile("pick ([0-9]+)");
+        Matcher matcher2 = pattern2.matcher(message);
 
-        Pattern p2 = Pattern.compile("!cah boot ([a-zA-Z0-9]+)");
-        Matcher m2 = p2.matcher(message);
+        Pattern pattern3 = Pattern.compile("!cah boot ([a-zA-Z0-9]+)");
+        Matcher matcher3 = pattern3.matcher(message);
 
-        if (!channel.equalsIgnoreCase(this.channel))
+        if (!channel.equalsIgnoreCase(CardsAgainstHumanity.gameChannel))
             return;
         else if (message.equalsIgnoreCase("!cah join"))
             join(sender);
         else if (message.equalsIgnoreCase("!cah drop"))
             drop(sender);
-        else if (message.equalsIgnoreCase("!cah start") && status == GameStatus.Idle)
+        else if (message.equalsIgnoreCase("!cah start") && currentGameStatus == GameStatus.Idle)
             start();
         else if (message.equalsIgnoreCase("!cah stop"))
             stop();
         else if (message.equalsIgnoreCase("cards"))
             getPlayer(sender).showCardsToPlayer();
-        else if (m.matches() && status == GameStatus.WaitingForCards && !czar.getName().equals(sender))
-            getPlayer(sender).playCard(m.group(1));
-        else if (m1.matches() && status == GameStatus.ChoosingWinner && czar.getName().equals(sender))
-            pickWinner(m1.group(1));
+        else if (matcher1.matches() && currentGameStatus == GameStatus.WaitingForCards && !currentCzar.getName().equals(sender))
+            getPlayer(sender).playCard(matcher1.group(1));
+        else if (matcher2.matches() && currentGameStatus == GameStatus.ChoosingWinner && currentCzar.getName().equals(sender))
+            pickWinner(matcher2.group(1));
         else if (message.equalsIgnoreCase("turn"))
             nag(sender);
         else if (message.equalsIgnoreCase("check"))
             checkForPlayedCards();
-        else if (m2.matches()) {
-            drop(m2.group(1));
+        else if (matcher3.matches()) {
+            drop(matcher3.group(1));
         }
     }
 
@@ -330,17 +327,10 @@ public class CardsAgainstHumanity extends PircBot {
         else {
             try {
                 this.connect("irc.gamesurge.net");
-            } catch (NickAlreadyInUseException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (IrcException e) {
-                // TODO Auto-generated catch block
+            } catch (Exception e) {
                 e.printStackTrace();
             }
-            this.joinChannel(channel);
+            this.joinChannel(gameChannel);
         }
     }
 
@@ -349,91 +339,90 @@ public class CardsAgainstHumanity extends PircBot {
         try {
             cardNumber = Integer.parseInt(winningNumber);
         } catch (NumberFormatException e) {
-            this.sendMessage(channel, czar.getName() + ": You have picked an invalid card, pick again");
+            this.message(currentCzar.getName() + ": You have picked an invalid card, pick again");
             return;
         }
-        cardNumber--;
         Player winningPlayer;
         try {
-            winningPlayer = randomPlayers.get(cardNumber);
+            winningPlayer = currentShuffledPlayers.get(cardNumber - 1);
         } catch (IndexOutOfBoundsException e) {
-            this.sendMessage(channel, czar.getName() + ": You have picked an invalid card, pick again");
+            this.message(currentCzar.getName() + ": You have picked an invalid card, pick again");
             return;
         }
         String winningCard = winningPlayer.playedCard;
-        this.sendMessage(channel, "The winning card is " + winningCard + "played by " + Colors.BOLD + winningPlayer.getName() + Colors.NORMAL + ". "
+        this.message("The winning card is " + winningCard + "played by " + Colors.BOLD + winningPlayer.getName() + Colors.NORMAL + ". "
                 + Colors.BOLD + winningPlayer.getName() + Colors.NORMAL + " is awarded one point");
         winningPlayer.addPoint();
         nextTurn();
     }
 
     private void start() {
-        blackCards = new ArrayList<String>(originalBlackCards);
-        whiteCards = new ArrayList<String>(originalWhiteCards);
+        activeBlackCards = new ArrayList<String>(originalBlackCards);
+        activeWhiteCards = new ArrayList<String>(originalWhiteCards);
 
-        Collections.shuffle(blackCards);
-        Collections.shuffle(whiteCards);
+        Collections.shuffle(activeBlackCards);
+        Collections.shuffle(activeWhiteCards);
 
-        this.sendMessage(channel, "Game begins in 45 seconds. Type !cah join to join the game.");
+        this.message("Game begins in 45 seconds. Type !cah join to join the game.");
 
-        status = GameStatus.WaitingForPlayers;
+        currentGameStatus = GameStatus.WaitingForPlayers;
 
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                sendMessage(channel, "Game starts in 30 seconds");
+                message("Game starts in 30 seconds");
             }
         }, 15000);
 
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                sendMessage(channel, "Game starts in 15 seconds");
+                message("Game starts in 15 seconds");
             }
         }, 30000);
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                if (players.size() < 3) {
-                    sendMessage(channel, "Not enough players to start a game");
-                    players.clear();
-                    status = GameStatus.Idle;
+                if (currentPlayers.size() < 3) {
+                    message("Not enough players to start a game");
+                    currentPlayers.clear();
+                    currentGameStatus = GameStatus.Idle;
                     return;
                 }
                 // Everything here is pre game stuff
-                sendMessage(channel, "Game starting now!");
-                czar = players.get(0);
-                sendMessage(channel, czar.getName() + " is the first czar");
-                blackCard = "\u00030,1" + blackCards.remove(0) + "\u0003";
-                requiredAnswers = StringUtils.countMatches(blackCard, "_");
-                blackCard.replaceAll("_", "<BLANK>");
-                sendMessage(channel, "The first black card is " + Colors.BOLD + "\"" + blackCard + "\"");
+                message("Game starting now!");
+                currentCzar = currentPlayers.get(0);
+                message(currentCzar.getName() + " is the first czar");
+                currentBlackCard = "\u00030,1" + activeBlackCards.remove(0) + "\u0003";
+                requiredAnswers = StringUtils.countMatches(currentBlackCard, "_");
+                currentBlackCard.replaceAll("_", "<BLANK>");
+                message("The first black card is " + Colors.BOLD + "\"" + currentBlackCard + "\"");
                 if (requiredAnswers > 1)
-                    sendMessage(channel, "Be sure to play " + requiredAnswers + " white cards this round");
-                status = GameStatus.WaitingForCards;
+                    message("Be sure to play " + requiredAnswers + " white cards this round");
+                currentGameStatus = GameStatus.WaitingForCards;
             }
         }, 45000); // 45 seconds
     }
 
     private void stop() {
-        status = GameStatus.Idle;
-        czar = null;
-        this.sendMessage(channel, "The game is over!");
-        String s = "Scores for this game were: ";
+        currentGameStatus = GameStatus.Idle;
+        currentCzar = null;
+        this.message("The game is over!");
+        String scoresMessage = "Scores for this game were: ";
         int winningScore = 0;
-        for (Player p : allPlayers) {
-            s += "[" + p.getName() + " " + p.getScore() + "] ";
-            if (p.getScore() > winningScore)
-                winningScore = p.getScore();
+        for (Player player : allPlayers) {
+            scoresMessage += "[" + player.getName() + " " + player.getScore() + "] ";
+            if (player.getScore() > winningScore)
+                winningScore = player.getScore();
         }
-        this.sendMessage(channel, s);
-        s = "Winners this game were: ";
+        this.message(scoresMessage);
+        scoresMessage = "Winners this game were: ";
         for (Player p : allPlayers) {
             if (p.getScore() == winningScore)
-                s += p.getName() + " ";
+                scoresMessage += p.getName() + " ";
         }
-        this.sendMessage(channel, s);
+        this.message(scoresMessage);
         allPlayers.clear();
-        players.clear();
+        currentPlayers.clear();
     }
 }
