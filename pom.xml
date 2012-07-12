@@ -29,7 +29,7 @@
     <outputDirectory>target/classes</outputDirectory>
     <finalName>CAHBot</finalName>
     <sourceDirectory>${basedir}/src/main/java</sourceDirectory>
-    <defaultGoal>clean package</defaultGoal>
+    <defaultGoal>clean install</defaultGoal>
     <resources>
       <resource>
         <targetPath>.</targetPath>
