@@ -286,6 +286,7 @@ public class CardsAgainstHumanity extends PircBot {
 		Random playerPicker = new Random();
 		ArrayList<Player> contestants = new ArrayList<Player>(players);
 		contestants.remove(oldCzar);
+		System.out.println("Contestants for czar: " + contestants.toString());
 		czar = contestants.get(playerPicker.nextInt(contestants.size()));
 		this.sendMessage(channel, czar.getName() + " is the next czar");
 	}

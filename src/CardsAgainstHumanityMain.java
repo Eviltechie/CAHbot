@@ -5,7 +5,7 @@ public class CardsAgainstHumanityMain {
 		bot.setVerbose(true);
 		bot.connect("irc.gamesurge.net");
 		bot.joinChannel("#joe.to");
-		bot.setMessageDelay(2500);
+		bot.setMessageDelay(2300);
 	}
 
 }

@@ -24,10 +24,7 @@ public class Player {
 
     @Override
     public int hashCode() {
-        if (hash == 0 || hash == 485) {
-            hash = 97 * 5 + (this.getName() != null ? this.getName().toLowerCase().hashCode() : 0);
-        }
-        return hash;
+        return name.toLowerCase().hashCode();
     }
 
 	public String getName() {
