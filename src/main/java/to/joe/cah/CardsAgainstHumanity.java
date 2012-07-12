@@ -20,7 +20,6 @@ import org.jibble.pircbot.PircBot;
 
 public class CardsAgainstHumanity extends PircBot {
 
-    // TODO remember score after leaving
     // TODO don't let people spam join/leave
     // TODO Shortcuts
 
@@ -36,8 +35,7 @@ public class CardsAgainstHumanity extends PircBot {
         Idle, // No game is playing
         WaitingForPlayers, // 30 second period where players should join
         WaitingForCards, // Waiting for all players to play cards
-        ChoosingWinner
-        // Waiting for the czar to pick a winner
+        ChoosingWinner // Waiting for the czar to pick a winner
     }
 
     // \x03#,# \u0003 Colors
@@ -114,11 +112,6 @@ public class CardsAgainstHumanity extends PircBot {
     }
 
     private void drop(String name) {
-        /*
-         * if (status == GameStatus.Idle) { this.sendMessage(channel,
-         * "There is no game currently playing to drop yourself from"); return;
-         * }
-         */
         Player player = getPlayer(name);
         if (player == null) {
             return;
@@ -322,9 +315,12 @@ public class CardsAgainstHumanity extends PircBot {
 
     @Override
     public void onNickChange(String oldNick, String login, String hostname, String newNick) {
-        if (getPlayer(oldNick) != null) {
-            getPlayer(oldNick).setName(newNick);
-        }
+    	for (Player p : allPlayers) {
+    		if (p.getName().equals(oldNick)) {
+    			p.setName(newNick);
+    			return;
+    		}
+    	}
     }
 
     @Override
