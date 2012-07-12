@@ -8,7 +8,7 @@ public class Player {
     private ArrayList<String> whiteCards = new ArrayList<String>();
     private int awesomePoints = 0;
     private CardsAgainstHumanity ircBot;
-    public String playedCard = null;
+    private String playedCard = null;
 
     public Player(String name, CardsAgainstHumanity ircBot) {
         this.name = name;
@@ -29,6 +29,10 @@ public class Player {
 
     public String getName() {
         return name;
+    }
+
+    public String getPlayedCard() {
+        return playedCard;
     }
 
     public int getScore() {
@@ -63,8 +67,7 @@ public class Player {
                 cardsToRemove.add(whiteCards.get(cardNumber));
             } catch (IndexOutOfBoundsException e) {
                 cardNumber++;
-                ircBot.message(getName() + ": You do not appear to have a " + cardNumber + ircBot.getOrdinal(cardNumber)
-                        + " card to play");
+                ircBot.message(getName() + ": You do not appear to have a " + cardNumber + ircBot.getOrdinal(cardNumber) + " card to play");
                 playedCard = null;
                 return;
             }
@@ -102,5 +105,9 @@ public class Player {
     @Override
     public String toString() {
         return "Player{" + "name=" + getName() + '}';
+    }
+
+    public void wipePlayedCard() {
+        this.playedCard = null;
     }
 }

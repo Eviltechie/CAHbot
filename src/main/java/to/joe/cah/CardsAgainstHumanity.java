@@ -43,6 +43,8 @@ public class CardsAgainstHumanity extends PircBot {
     // \x03#,# \u0003 Colors
     // \x02 \u0002 Bold
 
+    final static String gameChannel = "#joe.to";
+
     public static void main(String[] args) throws Exception {
         CardsAgainstHumanity bot = new CardsAgainstHumanity("CAHBot");
         bot.setVerbose(true);
@@ -51,7 +53,6 @@ public class CardsAgainstHumanity extends PircBot {
         bot.setMessageDelay(2300);
     }
 
-    final static String gameChannel = "#joe.to";
     private ArrayList<Player> currentPlayers = new ArrayList<Player>();
     private HashSet<Player> allPlayers = new HashSet<Player>();
     // private ArrayList<Player> blacklist = new ArrayList<Player>();
@@ -93,7 +94,7 @@ public class CardsAgainstHumanity extends PircBot {
     public void checkForPlayedCards() {
         int playedCardsCount = 0;
         for (Player player : currentPlayers) {
-            if (player.playedCard != null)
+            if (player.getPlayedCard() != null)
                 playedCardsCount++;
         }
         if (playedCardsCount + 1 == currentPlayers.size()) {
@@ -105,15 +106,11 @@ public class CardsAgainstHumanity extends PircBot {
             Collections.shuffle(currentShuffledPlayers);
             for (Player player : currentShuffledPlayers) {
                 playedCardsCount++;
-                this.message(playedCardsCount + ") " + player.playedCard);
+                this.message(playedCardsCount + ") " + player.getPlayedCard());
             }
             this.message(currentCzar.getName() + ": Pick the best white card");
             currentGameStatus = GameStatus.ChoosingWinner;
         }
-    }
-    
-    public void message(String message) {
-        this.sendMessage(gameChannel, message);
     }
 
     private void drop(String name) {
@@ -123,13 +120,13 @@ public class CardsAgainstHumanity extends PircBot {
          * }
          */
         Player player = getPlayer(name);
-        if(player == null){
+        if (player == null) {
             return;
         }
         this.message(player.getName() + " has left this game of Cards Against Humanity with " + player.getScore() + " points!");
         currentPlayers.remove(player);
         // blacklist.add(p);
-        if(currentPlayers.size() < 3)
+        if (currentPlayers.size() < 3)
             stop();
         if (currentCzar.equals(player))
             newCzar();
@@ -199,8 +196,8 @@ public class CardsAgainstHumanity extends PircBot {
         }
         /*
          * for (Player p : blacklist) { if (p.getName().equals(name)) {
-         * this.message(name +
-         * ": You can't join a game after leaving one"); return; } }
+         * this.message(name + ": You can't join a game after leaving one");
+         * return; } }
          */
         for (Player player : allPlayers) {
             if (player.getName().equalsIgnoreCase(name)) {
@@ -213,11 +210,15 @@ public class CardsAgainstHumanity extends PircBot {
         this.message(Colors.BOLD + name + " joins this game of Cards Against Humanity!");
     }
 
+    public void message(String message) {
+        this.sendMessage(gameChannel, message);
+    }
+
     private void nag(String sender) {
         if (currentGameStatus == GameStatus.WaitingForCards) {
             String missingPlayers = "";
             for (Player player : currentPlayers) {
-                if (!player.equals(currentCzar) && player.playedCard == null) {
+                if (!player.equals(currentCzar) && player.getPlayedCard() == null) {
                     System.out.println(player.getName());
                     missingPlayers += player.getName() + " ";
                 }
@@ -252,7 +253,7 @@ public class CardsAgainstHumanity extends PircBot {
             message("Be sure to play " + requiredAnswers + " white cards this round");
         currentGameStatus = GameStatus.WaitingForCards;
         for (Player player : currentPlayers) {
-            player.playedCard = null;
+            player.wipePlayedCard();
             player.drawTo10();
             if (!player.equals(currentCzar))
                 player.showCardsToPlayer();
@@ -349,9 +350,9 @@ public class CardsAgainstHumanity extends PircBot {
             this.message(currentCzar.getName() + ": You have picked an invalid card, pick again");
             return;
         }
-        String winningCard = winningPlayer.playedCard;
-        this.message("The winning card is " + winningCard + "played by " + Colors.BOLD + winningPlayer.getName() + Colors.NORMAL + ". "
-                + Colors.BOLD + winningPlayer.getName() + Colors.NORMAL + " is awarded one point");
+        String winningCard = winningPlayer.getPlayedCard();
+        this.message("The winning card is " + winningCard + "played by " + Colors.BOLD + winningPlayer.getName() + Colors.NORMAL + ". " + Colors.BOLD
+                + winningPlayer.getName() + Colors.NORMAL + " is awarded one point");
         winningPlayer.addPoint();
         nextTurn();
     }
