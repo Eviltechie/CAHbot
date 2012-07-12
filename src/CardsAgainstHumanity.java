@@ -361,8 +361,7 @@ public class CardsAgainstHumanity extends PircBot {
 			return;
 		}
 		String winningCard = winningPlayer.playedCard;
-		this.sendMessage(channel, "The winning card is " + winningCard + "played by " + winningPlayer.getName());
-		this.sendMessage(channel, winningPlayer.getName() + " is awarded one point");
+		this.sendMessage(channel, "The winning card is " + winningCard + "played by " + PircColors.BOLD + winningPlayer.getName() + PircColors.NORMAL + ". " + PircColors.BOLD + winningPlayer.getName() + PircColors.NORMAL + " is awarded one point");
 		winningPlayer.addPoint();
 		nextTurn();
 	}
