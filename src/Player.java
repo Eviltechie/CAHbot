@@ -69,7 +69,13 @@ public class Player {
 		playedCard = "";
 		for (String s : cardStrings) {
 			System.out.println("Attempting to parse " + "\"" + s.replaceAll(" ", "") + "\"");
-			int cardNumber = Integer.parseInt(s);
+			int cardNumber = 0;
+			try {
+			    cardNumber = Integer.parseInt(s);
+			} catch (NumberFormatException e) {
+	            ircBot.sendMessage(ircBot.channel, getName() + ": You have picked an invalid card, pick again");
+	            return;
+	        }
 			cardNumber--;
 			try {
 				playedCard += "\u00031,0[" + whiteCards.get(cardNumber) + "]\u0003 ";

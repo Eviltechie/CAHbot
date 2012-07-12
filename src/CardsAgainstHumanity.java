@@ -351,7 +351,13 @@ public class CardsAgainstHumanity extends PircBot {
 	}
 	
 	private void pickWinner(String winningNumber) {
-		int cardNumber = Integer.parseInt(winningNumber);
+	    int cardNumber = 0;
+	    try {
+	        cardNumber = Integer.parseInt(winningNumber);
+	    } catch (NumberFormatException e) {
+	        this.sendMessage(channel, czar.getName() + ": You have picked an invalid card, pick again");
+	        return;
+	    }
 		cardNumber--;
 		Player winningPlayer;
 		try {
