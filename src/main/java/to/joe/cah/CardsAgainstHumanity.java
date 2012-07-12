@@ -230,17 +230,28 @@ public class CardsAgainstHumanity extends PircBot {
     }
 
     private void newCzar() {
-        Player oldCzar = currentCzar;
-        ArrayList<Player> contestants = new ArrayList<Player>(currentPlayers);
-        contestants.remove(oldCzar);
-        System.out.println("Contestants for czar: " + contestants.toString());
-        Collections.shuffle(contestants);
-        currentCzar = contestants.get(0);
+        this.newCzar(null);
+    }
+
+    private void newCzar(Player czar) {
+        if (czar == null) {
+            Player oldCzar = currentCzar;
+            ArrayList<Player> contestants = new ArrayList<Player>(currentPlayers);
+            contestants.remove(oldCzar);
+            Collections.shuffle(contestants);
+            newCzar(contestants.get(0));
+            return;
+        }
+        currentCzar = czar;
         this.message(currentCzar.getName() + " is the next czar");
     }
 
     private void nextTurn() {
-        newCzar();
+        this.nextTurn(null);
+    }
+
+    private void nextTurn(Player czar) {
+        newCzar(czar);
         if (activeBlackCards.size() < 1) {
             activeBlackCards = new ArrayList<String>(originalBlackCards);
             Collections.shuffle(activeBlackCards);
@@ -392,15 +403,7 @@ public class CardsAgainstHumanity extends PircBot {
                 }
                 // Everything here is pre game stuff
                 message("Game starting now!");
-                currentCzar = currentPlayers.get(0);
-                message(currentCzar.getName() + " is the first czar");
-                currentBlackCard = "\u00030,1" + activeBlackCards.remove(0) + "\u0003";
-                requiredAnswers = StringUtils.countMatches(currentBlackCard, "_");
-                currentBlackCard.replaceAll("_", "<BLANK>");
-                message("The first black card is " + Colors.BOLD + "\"" + currentBlackCard + "\"");
-                if (requiredAnswers > 1)
-                    message("Be sure to play " + requiredAnswers + " white cards this round");
-                currentGameStatus = GameStatus.WaitingForCards;
+                CardsAgainstHumanity.this.nextTurn(currentPlayers.get(0));
             }
         }, 45000); // 45 seconds
     }
