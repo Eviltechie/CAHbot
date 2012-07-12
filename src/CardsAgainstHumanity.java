@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jibble.pircbot.IrcException;
 import org.jibble.pircbot.NickAlreadyInUseException;
 import org.jibble.pircbot.PircBot;
+import org.jibble.pircbot.PircColors;
 
 public class CardsAgainstHumanity extends PircBot {
 	
@@ -253,7 +254,7 @@ public class CardsAgainstHumanity extends PircBot {
 				blackCard = "\u00030,1" + blackCards.remove(0) + "\u0003";
 				requiredAnswers = StringUtils.countMatches(blackCard, "_");
 				blackCard.replaceAll("_", "<BLANK>");
-				sendMessage(channel, "The first black card is " + blackCard);
+				sendMessage(channel, "The first black card is " + PircColors.BOLD + "\"" + blackCard + "\"");
 				if (requiredAnswers > 1)
 					sendMessage(channel, "Be sure to play " + requiredAnswers + " white cards this round");
 				status = GameStatus.WaitingForCards;
@@ -302,7 +303,7 @@ public class CardsAgainstHumanity extends PircBot {
 		blackCard = "\u00030,1" + blackCards.remove(0) + "\u0003";
 		requiredAnswers = StringUtils.countMatches(blackCard, "_");
 		blackCard.replaceAll("_", "<BLANK>");
-		this.sendMessage(channel, "The next black card is " + blackCard);
+		this.sendMessage(channel, "The next black card is " + PircColors.BOLD + "\"" + blackCard + "\"");
 		if (requiredAnswers > 1)
 			sendMessage(channel, "Be sure to play " + requiredAnswers + " white cards this round");
 		status = GameStatus.WaitingForCards;
@@ -330,8 +331,7 @@ public class CardsAgainstHumanity extends PircBot {
 		}
 		if (playedCards + 1 == players.size()) {
 			this.sendMessage(channel, "All players have played their white cards");
-			this.sendMessage(channel, "The black card is " + blackCard);
-			this.sendMessage(channel, "The white cards are:");
+			this.sendMessage(channel, "The black card is " + PircColors.BOLD +"\"" + blackCard + "\"" + PircColors.NORMAL + " The white cards are:");
 			playedCards = 0;
 			randomPlayers = new ArrayList<Player>(players);
 			randomPlayers.remove(czar);
