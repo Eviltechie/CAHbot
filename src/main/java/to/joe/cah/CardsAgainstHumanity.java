@@ -14,7 +14,6 @@ import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jibble.pircbot.Colors;
 import org.jibble.pircbot.PircBot;
 
@@ -134,14 +133,14 @@ public class CardsAgainstHumanity extends PircBot {
         }
         int tenRemainder = value % 10;
         switch (tenRemainder) {
-        case 1:
-            return "st";
-        case 2:
-            return "nd";
-        case 3:
-            return "rd";
-        default:
-            return "th";
+            case 1:
+                return "st";
+            case 2:
+                return "nd";
+            case 3:
+                return "rd";
+            default:
+                return "th";
         }
     }
 
@@ -250,7 +249,7 @@ public class CardsAgainstHumanity extends PircBot {
             Collections.shuffle(activeBlackCards);
         }
         currentBlackCard = "\u00030,1" + activeBlackCards.remove(0) + "\u0003";
-        requiredAnswers = StringUtils.countMatches(currentBlackCard, "_");
+        requiredAnswers = this.countMatches(currentBlackCard, "_");
         currentBlackCard.replaceAll("_", "<BLANK>");
         this.message("The next black card is " + Colors.BOLD + "\"" + currentBlackCard + "\"");
         if (requiredAnswers > 1)
@@ -262,6 +261,15 @@ public class CardsAgainstHumanity extends PircBot {
             if (!player.equals(currentCzar))
                 player.showCardsToPlayer();
         }
+    }
+
+    private int countMatches(String haystack, String needle) {
+        int count = 0;
+        int index = 0;
+        while ((index = haystack.indexOf(needle, index + 1)) != -1) {
+            count++;
+        }
+        return count;
     }
 
     public String nextWhiteCard() {
@@ -315,12 +323,12 @@ public class CardsAgainstHumanity extends PircBot {
 
     @Override
     public void onNickChange(String oldNick, String login, String hostname, String newNick) {
-    	for (Player p : allPlayers) {
-    		if (p.getName().equals(oldNick)) {
-    			p.setName(newNick);
-    			return;
-    		}
-    	}
+        for (Player player : allPlayers) {
+            if (player.getName().equals(oldNick)) {
+                player.setName(newNick);
+                return;
+            }
+        }
     }
 
     @Override
@@ -358,8 +366,7 @@ public class CardsAgainstHumanity extends PircBot {
             return;
         }
         String winningCard = winningPlayer.getPlayedCard();
-        this.message("The winning card is " + winningCard + "played by " + Colors.BOLD + winningPlayer.getName() + Colors.NORMAL + ". " + Colors.BOLD
-                + winningPlayer.getName() + Colors.NORMAL + " is awarded one point");
+        this.message("The winning card is " + winningCard + "played by " + Colors.BOLD + winningPlayer.getName() + Colors.NORMAL + ". " + Colors.BOLD + winningPlayer.getName() + Colors.NORMAL + " is awarded one point");
         winningPlayer.addPoint();
         nextTurn();
     }
@@ -417,9 +424,9 @@ public class CardsAgainstHumanity extends PircBot {
         }
         this.message(scoresMessage);
         scoresMessage = "Winners this game were: ";
-        for (Player p : allPlayers) {
-            if (p.getScore() == winningScore)
-                scoresMessage += p.getName() + " ";
+        for (Player player : allPlayers) {
+            if (player.getScore() == winningScore)
+                scoresMessage += player.getName() + " ";
         }
         this.message(scoresMessage);
         allPlayers.clear();
