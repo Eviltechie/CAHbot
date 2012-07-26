@@ -39,11 +39,6 @@ public class Player {
         return awesomePoints;
     }
 
-    @Override
-    public int hashCode() {
-        return name.toLowerCase().hashCode();
-    }
-
     public void playCard(String cardString) {
         if (playedCard != null) {
             ircBot.message(getName() + ": You can't play twice");
@@ -101,13 +96,30 @@ public class Player {
         ircBot.sendNotice(getName(), cards);
         // ircBot.sendMessage(getName(), cards);
     }
+    
+    public void wipePlayedCard() {
+        this.playedCard = null;
+    }
 
     @Override
     public String toString() {
         return "Player{" + "name=" + getName() + '}';
     }
-
-    public void wipePlayedCard() {
-        this.playedCard = null;
+    
+    @Override
+    public boolean equals(Object object) {
+        if(object instanceof Player) {
+            return ((Player) object).name.equalsIgnoreCase(this.name);
+        }
+        if(object instanceof String) {
+            return ((String) object).equalsIgnoreCase(this.name);
+        }
+        return false;
     }
+    
+    @Override
+    public int hashCode() {
+        return name.toLowerCase().hashCode();
+    }
+
 }
