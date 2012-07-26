@@ -51,7 +51,7 @@ public class CardsAgainstHumanity extends PircBot {
     }
 
     private ArrayList<Player> currentPlayers = new ArrayList<Player>();
-    private HashSet<Player> allPlayers = new HashSet<Player>();
+    private ArrayList<Player> allPlayers = new ArrayList<Player>();
     // private ArrayList<Player> blacklist = new ArrayList<Player>();
     private ArrayList<Player> currentShuffledPlayers;
     private ArrayList<String> originalBlackCards = new ArrayList<String>();
@@ -146,7 +146,7 @@ public class CardsAgainstHumanity extends PircBot {
 
     private Player getPlayer(String name) {
         for (Player player : currentPlayers) {
-            if (player.getName().equals(name))
+            if (player.equals(name))
                 return player;
         }
         return null;
@@ -192,13 +192,15 @@ public class CardsAgainstHumanity extends PircBot {
          * return; } }
          */
         for (Player player : allPlayers) {
-            if (player.getName().equalsIgnoreCase(name)) {
+            if (player.equals(name)) {
                 currentPlayers.add(player);
                 this.message(Colors.BOLD + name + " rejoins this game of Cards Against Humanity!");
                 return;
             }
         }
-        currentPlayers.add(new Player(name, this));
+        Player player = new Player(name, this);
+        currentPlayers.add(player);
+        allPlayers.add(player);
         this.message(Colors.BOLD + name + " joins this game of Cards Against Humanity!");
     }
 
@@ -324,7 +326,13 @@ public class CardsAgainstHumanity extends PircBot {
     @Override
     public void onNickChange(String oldNick, String login, String hostname, String newNick) {
         for (Player player : allPlayers) {
-            if (player.getName().equals(oldNick)) {
+            if (player.equals(oldNick)) {
+                player.setName(newNick);
+                return;
+            }
+        }
+        for (Player player : currentPlayers) {
+            if (player.equals(oldNick)) {
                 player.setName(newNick);
                 return;
             }
@@ -368,6 +376,7 @@ public class CardsAgainstHumanity extends PircBot {
         String winningCard = winningPlayer.getPlayedCard();
         this.message("The winning card is " + winningCard + "played by " + Colors.BOLD + winningPlayer.getName() + Colors.NORMAL + ". " + Colors.BOLD + winningPlayer.getName() + Colors.NORMAL + " is awarded one point");
         winningPlayer.addPoint();
+        allPlayers.get(allPlayers.indexOf(winningCard)).addPoint();
         nextTurn();
     }
 
