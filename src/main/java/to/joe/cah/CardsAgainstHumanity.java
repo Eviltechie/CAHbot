@@ -376,7 +376,7 @@ public class CardsAgainstHumanity extends PircBot {
         String winningCard = winningPlayer.getPlayedCard();
         this.message("The winning card is " + winningCard + "played by " + Colors.BOLD + winningPlayer.getName() + Colors.NORMAL + ". " + Colors.BOLD + winningPlayer.getName() + Colors.NORMAL + " is awarded one point");
         winningPlayer.addPoint();
-        allPlayers.get(allPlayers.indexOf(winningCard)).addPoint();
+        allPlayers.get(allPlayers.indexOf(winningPlayer)).addPoint();
         nextTurn();
     }
 
