@@ -289,13 +289,13 @@ public class CardsAgainstHumanity extends PircBot {
 
     @Override
     public void onMessage(String channel, String sender, String login, String hostname, String message) {
-        Pattern pattern1 = Pattern.compile("play ((?:[0-9]+ ?){" + requiredAnswers + "})");
+        Pattern pattern1 = Pattern.compile("play ((?:[0-9]+ ?){" + requiredAnswers + "}) *");
         Matcher matcher1 = pattern1.matcher(message);
 
-        Pattern pattern2 = Pattern.compile("pick ([0-9]+)");
+        Pattern pattern2 = Pattern.compile("pick ([0-9]+) *");
         Matcher matcher2 = pattern2.matcher(message);
 
-        Pattern pattern3 = Pattern.compile("!cah boot ([a-zA-Z0-9]+)");
+        Pattern pattern3 = Pattern.compile("!cah boot ([a-zA-Z0-9]+) *");
         Matcher matcher3 = pattern3.matcher(message);
 
         if (!channel.equalsIgnoreCase(CardsAgainstHumanity.gameChannel))
